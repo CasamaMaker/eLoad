@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 
-//pantalla Oled
+//******************* PANTALLA OLED ********************//
 #include "SSD1306Wire.h"
 #include "pantallaOled.h"
 SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
@@ -15,14 +15,13 @@ SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  S
 
 
 
-
+//***************** WIFI MANAGER **********************//
 #include <wifimanager.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "SPIFFS.h"
-//#include <WiFiManager.h>
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
@@ -34,22 +33,12 @@ const char* PARAM_INPUT_2 = "pass";
 //Variables to save values from HTML form
 String ssid;
 String pass;
-//String ip;
-//String gateway;
 
 // File paths to save input values permanently
 const char* ssidPath = "/ssid.txt";
 const char* passPath = "/pass.txt";
-//const char* ipPath = "/ip.txt";
-//const char* gatewayPath = "/gateway.txt";
 
 IPAddress localIP;
-//IPAddress localIP(192, 168, 1, 200); // hardcoded
-
-// Set your Gateway IP address
-IPAddress localGateway;
-//IPAddress localGateway(192, 168, 1, 1); //hardcoded
-//IPAddress subnet(255, 255, 0, 0);
 
 // Timer variables
 unsigned long previousMillis = 0;
@@ -60,15 +49,17 @@ const int ledPin = 2;
 // Stores LED state
 
 String ledState;
+//***********************************************************
 
 
 
-
-
-
-
-
-
+//****************** DIGITAL LED ******************************
+#include <FastLED.h>
+#define NUM_LEDS 1
+#define DATA_PIN 2
+#define BRIGHTNESS  15
+CRGB leds[NUM_LEDS];
+//***********************************************************
 
 
 
@@ -92,12 +83,15 @@ void setup() {
 
 
 
+  FastLED.addLeds<WS2812B, DATA_PIN>(leds, NUM_LEDS);      //NEOPIXEL
+  //leds[0] = CRGB::Green;
+  //FastLED.setBrightness( BRIGHTNESS );
+  //FastLED.show();
+  //FastLED.delay(8);
 
 
 
-
-
-
+/*
   initSPIFFS();
 
   // Set GPIO 2 as an OUTPUT
@@ -179,7 +173,7 @@ void setup() {
       ESP.restart();
     });
     server.begin();
-  }
+  }*/
 
 
 
@@ -190,17 +184,22 @@ void setup() {
 
 
 
-
-
+  delay(1000);
 
 }
 
 void loop(){
- Serial.print(i++);
- Serial.print(" - ");
- imprimeixOled("Numm: " + String(i), display);
+  Serial.print(i++);
+  Serial.print(" - ");
+  imprimeixOled("Num: " + String(i), display);
   Serial.println(WiFi.localIP());
-  delay(500);
+  
+  
+  
+  
+
+
+
 
 
   if(!digitalRead(9)){
@@ -214,6 +213,19 @@ void loop(){
 
     ESP.restart();
   }
+
+
+  leds[0] = CRGB::Black;
+  FastLED.show();
+  //FastLED.delay(500);
+  FastLED.setBrightness( BRIGHTNESS );
+  delay(500);
+ 
+  leds[0] = CRGB::Red;
+  FastLED.setBrightness( BRIGHTNESS );
+  FastLED.show();
+  //FastLED.delay(500);
+  delay(500);
   
 }
 

@@ -56,14 +56,7 @@ bool initWiFi(String ssid, String pass, unsigned long previousMillis, const long
   }
 
   WiFi.mode(WIFI_STA);
-  //localIP.fromString(ip.c_str());
-  //localGateway.fromString(gateway.c_str());
 
-
-  /*if (!WiFi.config(localIP, localGateway, subnet)){
-    Serial.println("STA Failed to configure");
-    return false;
-  }*/
   WiFi.begin(ssid.c_str(), pass.c_str());
   Serial.println("Connecting to WiFi...");
 
