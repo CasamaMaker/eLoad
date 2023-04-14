@@ -79,14 +79,20 @@ bool initWiFi(String ssid, String pass, unsigned long previousMillis, const long
 String processor(const String& var) {
   int ledPin = 2;
   String ledState;
+
+  int p = random(10);
   if(var == "STATE") {
-    if(digitalRead(ledPin)) {
+    /*if(digitalRead(ledPin)) {
       ledState = "ON";
     }
     else {
       ledState = "OFF";
     }
-    return ledState;
+    return ledState;*/
+    
+    return String(p);
+  }else{
+    return String(p);
   }
-  return String();
+  
 }

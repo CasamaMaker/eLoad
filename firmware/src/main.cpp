@@ -65,7 +65,69 @@ CRGB leds[NUM_LEDS];
 
 
 
+
+
+//********************** WEB WITH GRAPHIC *******************
+
+#include <Wire.h>
+
+long int randNumber;
+
+
+
+
+
+
 int i = 0;
+
+String p;
+float t;
+float v;
+
+
+#define PWMPIN 6
+int PWM = 0;
+
+String readBME280Temperature() {
+  // Read temperature as Celsius (the default)
+  /*t = t + random(-2, 2)/10.0;
+  // Convert temperature to Fahrenheit
+  //t = 1.8 * t + 32;
+  if (isnan(t)) {
+    Serial.println("Failed to read from BME280 sensor!");
+    return "";
+  }
+  else {
+    Serial.println(t);
+    return String(t);
+  }*/
+
+  //Serial.print(" - amps: ");
+  t = 4*analogRead(1)*3.3/4095;
+  return String(t);
+}
+
+
+String randomVolts() {
+  // Read temperature as Celsius (the default)
+  /*v = v + random(-2, 2)/10.0;
+  if (isnan(v)) {
+    Serial.println("Failed to read from BME280 sensor!");
+    return "";
+  }
+  else {
+    Serial.println(v);
+    return String(v);
+  }*/
+
+  //Serial.print(" - volts: ");
+  v = 25.5*analogRead(3)*3.3/4095;  
+
+  return String(v);
+}
+
+
+
 
 void setup() {
   
@@ -78,6 +140,7 @@ void setup() {
   delay(200);
 
   pinMode(9, INPUT);
+  pinMode(PWMPIN, OUTPUT);  //pwm
 
 
 
@@ -91,7 +154,7 @@ void setup() {
 
 
 
-/*
+
   initSPIFFS();
 
   // Set GPIO 2 as an OUTPUT
@@ -108,28 +171,33 @@ void setup() {
   //Serial.println(ip);
   //Serial.println(gateway);
 
-  if(initWiFi(ssid, pass, previousMillis, interval)) {
+  if(initWiFi(ssid, pass, previousMillis, interval)) {  //******************************
     // Route for root / web page
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(SPIFFS, "/index.html", "text/html", false, processor);
+      request->send(SPIFFS, "/index.html", "text/html");
     });
     server.serveStatic("/", SPIFFS, "/");
     
     // Route to set GPIO state to HIGH
-    server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
-      digitalWrite(ledPin, HIGH);
-      request->send(SPIFFS, "/index.html", "text/html", false, processor);
+    server.on("/current", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", readBME280Temperature().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+    });
+
+    server.on("/tension", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", randomVolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     // Route to set GPIO state to LOW
-    server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
+    /*server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
       digitalWrite(ledPin, LOW);
       request->send(SPIFFS, "/index.html", "text/html", false, processor);
-    });
+    });*/
     server.begin();
   }
   else {
-    // Connect to Wi-Fi network with SSID and password
+    // Connect to Wi-Fi network with SSID and password ************************************
     Serial.println("Setting AP (Access Point)");
     // NULL sets an open Access Point
     WiFi.softAP("ESP-WIFI-MANAGER", NULL);
@@ -173,7 +241,7 @@ void setup() {
       ESP.restart();
     });
     server.begin();
-  }*/
+  }
 
 
 
@@ -185,36 +253,36 @@ void setup() {
 
 
   delay(1000);
-
+  //analogWrite(PWMPIN,10);
 }
 
 void loop(){
   Serial.print(i++);
   Serial.print(" - ");
-  imprimeixOled("Num: " + String(i), display);
+  //imprimeixOled("Num: " + String(i), display);  //String(random(10)), display);
   Serial.println(WiFi.localIP());
   
   
   
   
+  
 
 
 
-
-
+/*
   if(!digitalRead(9)){
     ssid = "reset";
     Serial.println("SSID deleted");
     writeFile(SPIFFS, ssidPath, ssid.c_str());
 
     pass = "reset";
-    Serial.println("PASS deleted");
+    Serial.println("PASS deleted"); 
     writeFile(SPIFFS, passPath, pass.c_str());
 
     ESP.restart();
-  }
+  }*/
 
-
+/*
   leds[0] = CRGB::Black;
   FastLED.show();
   //FastLED.delay(500);
@@ -226,6 +294,35 @@ void loop(){
   FastLED.show();
   //FastLED.delay(500);
   delay(500);
+  */
+
+
+
+
+
+
+
+
+  if (Serial.available() > 0) {
+    int incomingvalue = Serial.parseInt();    
+    if(incomingvalue > 0){
+      if(incomingvalue == 300){
+        PWM = 0;
+      }else{
+        PWM = incomingvalue;
+      } 
+      analogWrite(PWMPIN,PWM);           
+    }
+    
+  }
   
+
+  Serial.print(PWM);
+  Serial.print(" - volts: ");
+  Serial.print(25.5*analogRead(3)*3.3/4095);  
+  Serial.print(" - amps: ");
+  Serial.println(4*analogRead(1)*3.3/4095);
+  delay(1000);
+
 }
 
