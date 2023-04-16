@@ -81,53 +81,28 @@ long int randNumber;
 int i = 0;
 
 String p;
-float t;
+float a;
 float v;
 
 
 #define PWMPIN 6
 int PWM = 0;
 
-String readBME280Temperature() {
-  // Read temperature as Celsius (the default)
-  /*t = t + random(-2, 2)/10.0;
-  // Convert temperature to Fahrenheit
-  //t = 1.8 * t + 32;
-  if (isnan(t)) {
-    Serial.println("Failed to read from BME280 sensor!");
-    return "";
-  }
-  else {
-    Serial.println(t);
-    return String(t);
-  }*/
-
-  //Serial.print(" - amps: ");
-  t = 4*analogRead(1)*3.3/4095;
-  return String(t);
+String readAmps() {
+  a = 4*analogRead(1)*3.3/4095;
+  return String(a);
 }
 
-
-String randomVolts() {
-  // Read temperature as Celsius (the default)
-  /*v = v + random(-2, 2)/10.0;
-  if (isnan(v)) {
-    Serial.println("Failed to read from BME280 sensor!");
-    return "";
-  }
-  else {
-    Serial.println(v);
-    return String(v);
-  }*/
-
-  //Serial.print(" - volts: ");
+String readvolts() {
   v = 25.5*analogRead(3)*3.3/4095;  
-
   return String(v);
 }
 
+String readPower() {
+  return String(v*a);
+}
 
-
+String hostname = "my-esp32";
 
 void setup() {
   
@@ -142,8 +117,8 @@ void setup() {
   pinMode(9, INPUT);
   pinMode(PWMPIN, OUTPUT);  //pwm
 
-
-
+  //WiFi.setHostname("my-esp32");
+  WiFi.setHostname(hostname.c_str());
 
 
   FastLED.addLeds<WS2812B, DATA_PIN>(leds, NUM_LEDS);      //NEOPIXEL
@@ -173,27 +148,42 @@ void setup() {
 
   if(initWiFi(ssid, pass, previousMillis, interval)) {  //******************************
     // Route for root / web page
+      
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(SPIFFS, "/index.html", "text/html");
     });
     server.serveStatic("/", SPIFFS, "/");
     
-    // Route to set GPIO state to HIGH
+    server.on("/readA", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", readAmps().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+    });
+
+    server.on("/readV", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", readvolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+    });
+
+    server.on("/readP", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", readPower().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+    });
+
     server.on("/current", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readBME280Temperature().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", readAmps().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/tension", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", randomVolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", readvolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
-    // Route to set GPIO state to LOW
-    /*server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
-      digitalWrite(ledPin, LOW);
-      request->send(SPIFFS, "/index.html", "text/html", false, processor);
-    });*/
+    server.on("/power", HTTP_GET, [](AsyncWebServerRequest *request) {
+      //digitalWrite(ledPin, HIGH);
+      request->send_P(200, "text/plain", readPower().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+    });
+
     server.begin();
   }
   else {
@@ -259,10 +249,18 @@ void setup() {
 void loop(){
   Serial.print(i++);
   Serial.print(" - ");
-  //imprimeixOled("Num: " + String(i), display);  //String(random(10)), display);
-  Serial.println(WiFi.localIP());
-  
-  
+  IPAddress myIP = WiFi.localIP();
+  String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
+  imprimeixOled(adresa, display);  //String(random(10)), display);
+  Serial.print(WiFi.localIP());
+  Serial.print("  ::  ");
+
+  Serial.print("PWM: ");
+  Serial.print(PWM);
+  Serial.print(" / Volts: ");
+  Serial.print(25.5*analogRead(3)*3.3/4095);  
+  Serial.print(" / Amps: ");
+  Serial.println(4*analogRead(1)*3.3/4095);
   
   
   
@@ -316,12 +314,7 @@ void loop(){
     
   }
   
-
-  Serial.print(PWM);
-  Serial.print(" - volts: ");
-  Serial.print(25.5*analogRead(3)*3.3/4095);  
-  Serial.print(" - amps: ");
-  Serial.println(4*analogRead(1)*3.3/4095);
+  
   delay(1000);
 
 }
