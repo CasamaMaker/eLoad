@@ -89,13 +89,23 @@ float v;
 int PWM = 0;
 
 String readAmps() {
-  a = 4*analogRead(1)*3.3/4095;
-  return String(a);
+  float sumaDeu;
+  for(i=10;i>0;i--){
+    a = 4*analogRead(1)*3.3/4095;
+    sumaDeu += a;
+  }
+  float final = sumaDeu/10;
+  return String(final);
 }
 
 String readvolts() {
-  v = 25.5*analogRead(3)*3.3/4095;  
-  return String(v);
+  float sumaDeu;
+  for(i=10;i>0;i--){  
+    v = 24*analogRead(3)*3.3/4095;
+    sumaDeu += v;
+  }
+  float final = sumaDeu/10;
+  return String(final);
 }
 
 String readPower() {

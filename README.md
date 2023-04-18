@@ -48,3 +48,4 @@ The Electronic Load - 60W is a great DIY project for those interested in electro
 - Batteries calculations
 - Design of 3D printable box
 - Create an easy configuration file
+- Comment all code
