@@ -32,6 +32,22 @@ The __Electronic Load - 60W__ has several features that make it a practical and 
 
 This project is designed for people who want to build their own electronic load for testing and evaluating power supplies, batteries, and other electronic components. It is a practical and affordable solution for those who do not want to spend a lot of money on a commercial electronic load but still want to have a reliable tool for their electronic projects.
 
+## GPIOs
+|Function|GPIO|Mode|
+|---|---|---
+|Cooling fan|0|Output|
+|ADC-Isense|1|Input|
+|Digital led|2|Output|
+|ADC-Vsense|3|Input|
+|ADC-Tsense1|4|Input|
+|Mosfet|6|Output|
+|Sw sense|7|Input|
+|Selector move B|8|Input|
+|Selector button|9|Input|
+|Selector move A|10|Input|
+|I2C-SCL|20|Communication|
+|I2C-SDA|21|Communication|
+
 ## Safety
 
 Safety is a top priority in the design of the __Electronic Load - 60W__. It includes overcurrent and overvoltage protection, and is designed to be safe and reliable for DIY enthusiasts.
