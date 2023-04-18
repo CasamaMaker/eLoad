@@ -1,5 +1,7 @@
 # Electronic Load - 60W
 
+___In development___
+
 This is a DIY project aimed at providing a practical, useful  and safe electronic load for people interested in electronics. While it is not be the most powerful electronic load available, it is designed to be easy to use and reliable, making it an excellent option for those looking for a DIY electronic load. We develop a HW and SW for complete integration, but you can pick up just on of them. Based in microcontroller ESP32-C3
 
 
