@@ -87,21 +87,35 @@ unsigned long currentTime;
 }*/
 
 String readAmps() {
-  //float sumaDeu;
-  //for(int i=0;i<10;i++){
-    amps = 4*analogRead(1)*3.3/4095;
-  //  sumaDeu += amps;
-  //  delay(100);
-  //}
-  //amps = sumaDeu/10;
+  float Vref = 2.6;
+  float amplification = 4.0;
+  float resistance = 0.05;
+
+  float Vadc = (Vref / 4095.0) * analogRead(1); // Calcula el voltaje en la entrada analógica
+  float voltage = Vadc /4; // Calcula el voltaje real en el divisor de voltaje
+  amps = voltage / resistance;
+
   return String(amps);
 }
 
 String readvolts() {
   //float sumaDeu;
   //for(int i=0;i<10;i++){
-    volts = 24*analogRead(3)*3.3/4095;      //26.18 ---1261
-    Serial.println(analogRead(3));
+    //volts = 24*analogRead(3)*3.3/4095;      //26.18 ---1261
+
+
+
+  float Vref = 2.6; // Tensión de referencia del ADC
+  float R1 = 25500.0; // Valor de la resistencia R1 del divisor de voltaje
+  float R2 = 1000.0; // Valor de la resistencia R2 del divisor de voltaje
+
+
+  float Vadc = (Vref / 4095.0) * analogRead(3); // Calcula el voltaje en la entrada analógica
+  volts = Vadc * (R1 + R2) / R2; // Calcula el voltaje real en el divisor de voltaje
+
+  //Serial.println(Vadc);
+    //volts = analogRead(3)*(2.6/4095)*((25500+1000)/25500);
+    //Serial.println(analogRead(3));
   //  sumaDeu += volts;
   //  delay(100);
   //}
@@ -167,6 +181,9 @@ void setup() {
 
   pinMode(9, INPUT);
   pinMode(PWMPIN, OUTPUT);  //pwm
+
+  analogSetAttenuation(ADC_11db);
+
 
   //WiFi.setHostname("my-esp32");
   WiFi.setHostname(hostname.c_str());
