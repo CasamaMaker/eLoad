@@ -67,52 +67,51 @@ CRGB leds[NUM_LEDS];
 
 
 
-//********************** WEB WITH GRAPHIC *******************
-
+//********************** SENSING *******************
+//#include "sense.h"
 #include <Wire.h>
-
-long int randNumber;
-
-
-
-
-
-
-int i = 0;
-
-String p;
-float a;
-float v;
-
-
 #define PWMPIN 6
 int PWM = 0;
+float amps;
+float volts;
+unsigned long currentTime;
+
+/*String readAmps() {
+  float sumaDeu;
+  for(int i=10;i>0;i--){
+    amps = 4*analogRead(1)*3.3/4095;
+    sumaDeu += amps;
+  }
+  amps = sumaDeu/10;
+  return String(amps);
+}*/
 
 String readAmps() {
-  float sumaDeu;
-  for(i=10;i>0;i--){
-    a = 4*analogRead(1)*3.3/4095;
-    sumaDeu += a;
-  }
-  float final = sumaDeu/10;
-  return String(final);
+  //float sumaDeu;
+  //for(int i=0;i<10;i++){
+    amps = 4*analogRead(1)*3.3/4095;
+  //  sumaDeu += amps;
+  //  delay(100);
+  //}
+  //amps = sumaDeu/10;
+  return String(amps);
 }
 
 String readvolts() {
-  float sumaDeu;
-  for(i=10;i>0;i--){  
-    v = 24*analogRead(3)*3.3/4095;
-    sumaDeu += v;
-  }
-  float final = sumaDeu/10;
-  return String(final);
+  //float sumaDeu;
+  //for(int i=0;i<10;i++){
+    volts = 24*analogRead(3)*3.3/4095;      //26.18 ---1261
+    Serial.println(analogRead(3));
+  //  sumaDeu += volts;
+  //  delay(100);
+  //}
+  //volts = sumaDeu/10;
+  return String(volts);
 }
 
 String readPower() {
-  return String(v*a);
+  return String(volts*amps);
 }
-
-
 
 
 
@@ -120,6 +119,7 @@ String readPower() {
 
 
 //******************** THERMISTOR ***********************
+
 float temp, adc, volt, resis, ohms, k;
 
 #define THERMISTOR_PIN 4
@@ -131,7 +131,7 @@ float temp, adc, volt, resis, ohms, k;
 
 String readTemp() {
   float sumaDeu;
-  for(i=10;i>0;i--){    
+  for(int i=10;i>0;i--){    
     int rawValue = analogRead(THERMISTOR_PIN);
     float voltage = rawValue * REFERENCE_VOLTAGE / 4095.0;
     float resistance = REFERENCE_RESISTANCE * voltage / (REFERENCE_VOLTAGE - voltage);
@@ -149,6 +149,8 @@ String readTemp() {
 
   return String(final);
 }
+
+
 
 
 String hostname = "my-esp32";
@@ -205,12 +207,12 @@ void setup() {
     
     server.on("/readA", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readAmps().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", /*String(amps).c_str()*/readAmps().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readV", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readvolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", /*String(volts).c_str()*/readvolts().c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readP", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -286,7 +288,7 @@ void setup() {
         }
       }
       request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + String(WiFi.localIP()));// + ip);
-      delay(3000);
+      delay(1000);
       ESP.restart();
     });
     server.begin();
@@ -299,84 +301,87 @@ void setup() {
 
 
 
-
+  currentTime = millis();
 
   delay(1000);
   //analogWrite(PWMPIN,10);
 }
 
 void loop(){
-  Serial.print(i++);
-  Serial.print(" - ");
-  IPAddress myIP = WiFi.localIP();
-  String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
-  imprimeixOled(adresa, display);  //String(random(10)), display);
-  Serial.print(WiFi.localIP());
-  Serial.print("  ::  ");
 
-  Serial.print("PWM: ");
-  Serial.print(PWM);
-  Serial.print(" / Volts: ");
-  Serial.print(25.5*analogRead(3)*3.3/4095);  
-  Serial.print(" / Amps: ");
-  Serial.println(4*analogRead(1)*3.3/4095);
+  if ((currentTime +1000) <= millis()){
+    //Serial.print(i++);
+    //Serial.print(" - ");
+    IPAddress myIP = WiFi.localIP();
+    String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
+    imprimeixOled(adresa, display);  //String(random(10)), display);
+    Serial.print(WiFi.localIP());
+    Serial.print("  ::  ");
+
+    Serial.print("PWM: ");
+    Serial.print(PWM);
+    Serial.print(" / Volts: ");
+    Serial.print(25.5*analogRead(3)*3.3/4095);  
+    Serial.print(" / Amps: ");
+    Serial.println(4*analogRead(1)*3.3/4095);
+    
+    /*Serial.print("  *********************  ");
+    adc = analogRead(4) & 4095;
+    Serial.print(" / ");
+    Serial.print(adc);
+    ohms= 100000 * ((4095 / adc)-1);
+    k = 0.25;
+    temp=k*ohms;
+    Serial.print(" / ");
+    Serial.println(temp/1000);*/
+
+
+    /*Serial.print("  ------------------->>  ");
+    int rawValue = analogRead(THERMISTOR_PIN);
+    float voltage = rawValue * REFERENCE_VOLTAGE / 4095.0;
+    float resistance = REFERENCE_RESISTANCE * voltage / (REFERENCE_VOLTAGE - voltage);
+
+    float steinhart;
+    steinhart = resistance / THERMISTOR_NOMINAL;      // (R/Ro)
+    steinhart = log(steinhart);                       // ln(R/Ro)
+    steinhart /= B_COEFFICIENT;                       // 1/B * ln(R/Ro)
+    steinhart += 1.0 / (TEMPERATURE_NOMINAL + 273.15); // + (1/To)
+    steinhart = 1.0 / steinhart - 273.15;             // Invertir y convertir a Celsius
+
+    Serial.print("Temperature: ");
+    Serial.print(steinhart);
+    Serial.println(" C");*/
+
+
+
+  /*
+    if(!digitalRead(9)){
+      ssid = "reset";
+      Serial.println("SSID deleted");
+      writeFile(SPIFFS, ssidPath, ssid.c_str());
+
+      pass = "reset";
+      Serial.println("PASS deleted"); 
+      writeFile(SPIFFS, passPath, pass.c_str());
+
+      ESP.restart();
+    }*/
+
+  /*
+    leds[0] = CRGB::Black;
+    FastLED.show();
+    //FastLED.delay(500);
+    FastLED.setBrightness( BRIGHTNESS );
+    delay(500);
   
-  /*Serial.print("  *********************  ");
-  adc = analogRead(4) & 4095;
-  Serial.print(" / ");
-  Serial.print(adc);
-  ohms= 100000 * ((4095 / adc)-1);
-  k = 0.25;
-  temp=k*ohms;
-  Serial.print(" / ");
-  Serial.println(temp/1000);*/
-
-
-  Serial.print("  ------------------->>  ");
-  int rawValue = analogRead(THERMISTOR_PIN);
-  float voltage = rawValue * REFERENCE_VOLTAGE / 4095.0;
-  float resistance = REFERENCE_RESISTANCE * voltage / (REFERENCE_VOLTAGE - voltage);
-
-  float steinhart;
-  steinhart = resistance / THERMISTOR_NOMINAL;      // (R/Ro)
-  steinhart = log(steinhart);                       // ln(R/Ro)
-  steinhart /= B_COEFFICIENT;                       // 1/B * ln(R/Ro)
-  steinhart += 1.0 / (TEMPERATURE_NOMINAL + 273.15); // + (1/To)
-  steinhart = 1.0 / steinhart - 273.15;             // Invertir y convertir a Celsius
-
-  Serial.print("Temperature: ");
-  Serial.print(steinhart);
-  Serial.println(" C");
-
-
-
-/*
-  if(!digitalRead(9)){
-    ssid = "reset";
-    Serial.println("SSID deleted");
-    writeFile(SPIFFS, ssidPath, ssid.c_str());
-
-    pass = "reset";
-    Serial.println("PASS deleted"); 
-    writeFile(SPIFFS, passPath, pass.c_str());
-
-    ESP.restart();
-  }*/
-
-/*
-  leds[0] = CRGB::Black;
-  FastLED.show();
-  //FastLED.delay(500);
-  FastLED.setBrightness( BRIGHTNESS );
-  delay(500);
- 
-  leds[0] = CRGB::Red;
-  FastLED.setBrightness( BRIGHTNESS );
-  FastLED.show();
-  //FastLED.delay(500);
-  delay(500);
-  */
-
+    leds[0] = CRGB::Red;
+    FastLED.setBrightness( BRIGHTNESS );
+    FastLED.show();
+    //FastLED.delay(500);
+    delay(500);
+    */
+    currentTime = millis();
+  }
 
 
 
@@ -398,7 +403,7 @@ void loop(){
   }
   
   
-  delay(1000);
+  //delay(1000);
 
 }
 

@@ -32,7 +32,7 @@ setInterval(function() {
     };
     xhttp.open("GET", "/readP", true);
     xhttp.send();
-  }, 1000);
+  }, 5000);
 
   setInterval(function() {
     var xhttp = new XMLHttpRequest();
@@ -44,7 +44,7 @@ setInterval(function() {
     };
     xhttp.open("GET", "/readT", true);
     xhttp.send();
-  }, 1000);
+  }, 5000);
   
   
   var chartA = new Highcharts.Chart({
@@ -170,7 +170,7 @@ setInterval(function() {
     };
     xhttp.open("GET", "/power", true);
     xhttp.send();
-  }, 1000 ) ; //this value is the sample time
+  }, 5000 ) ; //this value is the sample time
 
   var chartT = new Highcharts.Chart({
     chart:{ renderTo:'chart-ttt' },
@@ -212,4 +212,4 @@ setInterval(function() {
     };
     xhttp.open("GET", "/temperature", true);
     xhttp.send();
-  }, 1000 ) ; //this value is the sample time
+  }, 5000 ) ; //this value is the sample time
