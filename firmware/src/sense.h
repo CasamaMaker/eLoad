@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-String readTemp(int THERMISTOR_PIN);
-/*String readAmps();
-String readvolts();
-String readPower();*/
+String readTemp(float temperature);
+String readAmps(float* amps);
+String readvolts(float* volts);
+String readPower(float* volts, float* amps);
 
 #endif
