@@ -17,7 +17,6 @@ SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  S
 
 //***************** WIFI MANAGER **********************//
 #include <wifimanager.h>
-#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
@@ -121,8 +120,56 @@ String readPower() {
 
 float temperature;
 
+//******************** Selector ***********************
 
+#include <RotaryEncoder.h>
+const int pinSelectorMoveA = 10;
+const int pinSelectorMoveB = 8;
+const int pinSelectorButton = 9;
+const int timeThreshold = 5;
+long timeCounter = 0;
 
+const int maxSteps = 255;
+volatile int ISRCounter = 0;
+int counter = 0;
+bool button;
+
+bool IsCW = true;
+
+void doEncode()
+{
+  if (millis() > timeCounter + timeThreshold){
+    if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB)){
+      ISRCounter++;
+    }else{
+      ISRCounter--;
+    }
+    timeCounter = millis();
+  }
+    
+/*
+  if (millis() > timeCounter + timeThreshold)
+  {
+    if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB))
+    {
+      IsCW = true;
+      if (ISRCounter + 1 <= maxSteps) ISRCounter++;
+    }
+    else
+    {
+      IsCW = false;
+      if (ISRCounter - 1 > 0) ISRCounter--;
+    }
+    timeCounter = millis();
+  }*/
+}
+
+void encoderButton(){
+  if (millis() > timeCounter + timeThreshold){
+    button = true;
+    timeCounter = millis();
+  }
+}
 
 
 
@@ -142,9 +189,12 @@ void setup() {
   pinMode(PWMPIN, OUTPUT);  //pwm
   pinMode(0, OUTPUT);       //fan
   //digitalWrite(0, HIGH);
+  pinMode(pinSelectorMoveA, INPUT);
+  pinMode(pinSelectorMoveB, INPUT);
+
 
   analogSetAttenuation(ADC_2_5db);  //https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/
-      //ADC_2_5db
+
 
   //WiFi.setHostname("my-esp32");
   WiFi.setHostname(hostname.c_str());
@@ -168,13 +218,10 @@ void setup() {
   // Load values saved in SPIFFS
   ssid = readFile(SPIFFS, ssidPath);
   pass = readFile(SPIFFS, passPath);
-  //ip = readFile(SPIFFS, ipPath);
-  //gateway = readFile (SPIFFS, gatewayPath);
   Serial.println(ssid);
   Serial.println(pass);
-  //Serial.println(ip);
-  //Serial.println(gateway);
 
+/*
 
   if(initWiFi(ssid, pass, previousMillis, interval)) {  //******************************
     // Route for root / web page
@@ -186,12 +233,12 @@ void setup() {
     
     server.on("/readA", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", /*String(amps).c_str()*/readAmps(&amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", readAmps(&amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readV", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", /*String(volts).c_str()*/readvolts(&volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", readvolts(&volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readP", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -272,21 +319,44 @@ void setup() {
     });
     server.begin();
   }
-
+*/
 
 
   currentTime = millis();
 
-  delay(1000);
+  delay(100);
   //analogWrite(PWMPIN,10);
   IPAddress myIP = WiFi.localIP();
   String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
   imprimeixOled(adresa, display);  //String(random(10)), display);
 
+
+  // encoder
+  //encoder.begin();                                                           //set encoders pins as input & enable built-in pullup resistors
+
+  attachInterrupt(digitalPinToInterrupt(pinSelectorMoveA), doEncode, RISING);  //call encoderISR()       every high->low or low->high changes
+  //attachInterrupt(digitalPinToInterrupt(pinSelectorMoveB), doEncode, RISING);
+  attachInterrupt(digitalPinToInterrupt(pinSelectorButton), encoderButton, FALLING); //call encoderButtonISR() every high->low              changes
+
 }
 
 void loop(){
 
+  //imprimeixOled(String(position), display);
+  if (counter != ISRCounter)
+  {
+    counter = ISRCounter;
+    Serial.println(counter);
+    imprimeixOled(String(counter), display);
+  }
+  if (button){
+    Serial.println("PRESSED");
+    imprimeixOled("PRESSED", display);
+    button = false;
+    delay(20);
+  }
+  //delay(100);
+  Serial.print('.');
   /*if ((currentTime +1000) <= millis()){
     //Serial.print(i++);
     //Serial.print(" - ");
@@ -364,7 +434,7 @@ void loop(){
   
   
   
-  //delay(1000);
+  delay(50);
 
 }
 
