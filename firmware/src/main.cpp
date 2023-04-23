@@ -221,7 +221,7 @@ void setup() {
   Serial.println(ssid);
   Serial.println(pass);
 
-/*
+
 
   if(initWiFi(ssid, pass, previousMillis, interval)) {  //******************************
     // Route for root / web page
@@ -319,7 +319,7 @@ void setup() {
     });
     server.begin();
   }
-*/
+
 
 
   currentTime = millis();
