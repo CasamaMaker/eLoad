@@ -45,18 +45,29 @@ This project is designed for people who want to build their own electronic load 
 |Selector move B|8|Input|
 |Selector button|9|Input|
 |Selector move A|10|Input|
-|I2C-SCL|20|Communication|
-|I2C-SDA|21|Communication|
+|I2C-SCL|20|Communication for oled|
+|I2C-SDA|21|Communication for oled|
 
 ## Safety
 
-Safety is a top priority in the design of the __Electronic Load - 60W__. It includes overcurrent and overvoltage protection, and is designed to be safe and reliable for DIY enthusiasts.
+Safety is a top priority in the design of the __Electronic Load - 60W__. It includes HW and SW protections:
+__HW__
+- Resettable fuse of 6A, for overcurrent of load
+- Thermoswitch, 
+- Opam,
+- Main switch
+- Thermistor sensor, 
+- Fan
+
+__SW__
+- Thermistor monitoring for turn on the fan when temperature increase over 50ºC and turn of pwm signal when it is over 100.
+
+overcurrent and overvoltage protection, and is designed to be safe and reliable for DIY enthusiasts.
 
 ## Accuracity
-_TBD_
+It is the weak point of the ESPRESSIF microcontrollers, the internal ADC it is not accurate. In my tests, the error can be up to 10% of error, and it can change in the time. In HW design exist de option the use an external ADC for monitor Voltage and Current (not for temperature). As 
 
 ## Conclusion
-
 The Electronic Load - 60W is a great DIY project for those interested in electronics. It is practical, reliable, and safe, making it an excellent tool for testing and evaluating power supplies, batteries, and other electronic components.
 
 ## To do
