@@ -143,16 +143,16 @@ bool IsCW = true;
 
 void doEncode()
 {
-  if (millis() > timeCounter + timeThreshold){
+  /*if (millis() > timeCounter + timeThreshold){
     if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB)){
       ISRCounter++;
     }else{
       ISRCounter--;
     }
     timeCounter = millis();
-  }
+  }*/
     
-/*
+
   if (millis() > timeCounter + timeThreshold)
   {
     if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB))
@@ -165,17 +165,42 @@ void doEncode()
       IsCW = false;
       if (ISRCounter - 1 > 0) ISRCounter--;
     }
+    PWM = ISRCounter;
+    analogWrite(PWMPIN,PWM);
     timeCounter = millis();
-  }*/
+  }
 }
-
+bool botoInici = false;
 void encoderButton(){
   if (millis() > timeCounter + timeThreshold){
     button = true;
     timeCounter = millis();
   }
+  //botoInici=true;
 }
 
+
+
+//******************** Timer interruption ***********************
+#define TIMER_INTERRUPT_DEBUG         0
+#define _TIMERINTERRUPT_LOGLEVEL_     4
+#include "ESP32_C3_TimerInterrupt.h"
+
+bool IRAM_ATTR TimerHandler0(void * timerNo)
+{
+	/*static bool toggle0 = false;
+
+	//timer interrupt toggles pin PIN_D39
+	digitalWrite(PIN_D39, toggle0);
+	toggle0 = !toggle0;
+*/
+
+  
+	return true;
+}
+
+#define TIMER0_INTERVAL_MS        1000   //1000
+ESP32Timer ITimer0(0);
 
 
 String hostname = "my-esp32";
@@ -340,15 +365,19 @@ void setup() {
   IPAddress myIP = WiFi.localIP();
   String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
   imprimeixOled(adresa, display);  //String(random(10)), display);
+  
   while(digitalRead(pinSelectorButton)){}
-
+  //botoInici = false;
   // encoder
   //encoder.begin();                                                           //set encoders pins as input & enable built-in pullup resistors
 
   attachInterrupt(digitalPinToInterrupt(pinSelectorMoveA), doEncode, RISING);  //call encoderISR()       every high->low or low->high changes
   //attachInterrupt(digitalPinToInterrupt(pinSelectorMoveB), doEncode, RISING);
   attachInterrupt(digitalPinToInterrupt(pinSelectorButton), encoderButton, FALLING); //call encoderButtonISR() every high->low              changes
+  
+  
 
+  ITimer0.attachInterruptInterval(TIMER0_INTERVAL_MS * 1000, TimerHandler0);
   
 }
 
@@ -360,81 +389,15 @@ void loop(){
   readTemp(&temperature);
   readSwitch(&gateSwitch, digitalRead(gateSwitchPin));
 
-  //imprimeixOled(String(position), display);
-  /*if (counter != ISRCounter)
-  {
-    counter = ISRCounter;
-    Serial.println(counter);
-    imprimeixOled(String(counter), display);
-  }
-  if (button){
-    Serial.println("PRESSED");
-    imprimeixOled("PRESSED", display);
-    button = false;
-    delay(20);
-  }*/
-  //delay(100);
-  //Serial.print('.');
-  /*if ((currentTime +1000) <= millis()){
-    //Serial.print(i++);
-    //Serial.print(" - ");
-    IPAddress myIP = WiFi.localIP();
-    String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
-    imprimeixOled(adresa, display);  //String(random(10)), display);
-    Serial.print(WiFi.localIP());
-    Serial.print("  ::  ");
-
-    Serial.print("PWM: ");
-    Serial.print(PWM);
-    Serial.print(" / Volts: ");
-    Serial.print(volts);  
-    Serial.print(" / Amps: ");
-    Serial.println(amps);
-    Serial.print(" / Temp: ");
-    Serial.println(temperature);
-    
-
-  /*
-    if(!digitalRead(9)){
-      ssid = "reset";
-      Serial.println("SSID deleted");
-      writeFile(SPIFFS, ssidPath, ssid.c_str());
-
-      pass = "reset";
-      Serial.println("PASS deleted"); 
-      writeFile(SPIFFS, passPath, pass.c_str());
-
-      ESP.restart();
-    }*/
-
-  /*
-    leds[0] = CRGB::Black;
-    FastLED.show();
-    //FastLED.delay(500);
-    FastLED.setBrightness( BRIGHTNESS );
-    delay(500);
-  
-    leds[0] = CRGB::Red;
-    FastLED.setBrightness( BRIGHTNESS );
-    FastLED.show();
-    //FastLED.delay(500);
-    delay(500);
-    */
- //   currentTime = millis();
-//  }
-  //Serial.println(gateSwitch);
   imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
 
-  if(temperature > 50){
-    digitalWrite(0, HIGH);
-  }else{
-    digitalWrite(0, LOW);
-    analogWrite(PWMPIN,PWM);
-  }
+  Serial.println(">");
+  if(temperature > 50) digitalWrite(0, HIGH);
+  if(temperature > 80) analogWrite(PWMPIN,0); 
+  if(temperature < 40) digitalWrite(0, LOW);
+  if(temperature < 60) analogWrite(PWMPIN,PWM);
 
-  if(temperature > 100){
-    analogWrite(PWMPIN,0); 
-  }
+
   
   if (Serial.available() > 0) {
     int incomingvalue = Serial.parseInt();    

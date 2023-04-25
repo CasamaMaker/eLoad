@@ -6,7 +6,7 @@ This is a DIY project aimed at providing a practical, useful  and safe electroni
 
 [__Project published on OSHWLAB__](https://oshwlab.com/canmarques/electronic-load_v2_copy)
 
-![image](hardware/pictures/picture2.jpg)
+![](hardware/pictures/picture2.jpg)
 
 ---
 
@@ -49,7 +49,7 @@ The __Electronic Load - 60W__ has several features that make it a practical and 
 
 ## Monitoring web
 When you plug in the USB power to eLoad electronics, it will start and in a few seconds will show a IP (if it can connecto to the wifi) or it wil generate an AP wifi (where you can configure wifi, if you want). At any case, you will see this website.
-![image](hardware/pictures/web.png)
+![image](https://github.com/CanMarques/eLoad/tree/main/hardware/pictures/gift-web.mp4)
 
 ---
 
