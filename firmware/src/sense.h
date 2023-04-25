@@ -3,9 +3,10 @@
 
 #include <Arduino.h>
 
-String readTemp(float temperature);
-String readAmps(float* amps);
-String readvolts(float* volts);
-String readPower(float* volts, float* amps);
+void readTemp(float* temperature);
+void readAmps(float* amps);
+void readvolts(float* volts);
+void readPower(float* volts, float* amps, float* watts);
+void readSwitch(bool* gateSwitch, bool senseSw);
 
 #endif

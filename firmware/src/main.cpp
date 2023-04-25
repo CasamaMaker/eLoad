@@ -71,8 +71,7 @@ CRGB leds[NUM_LEDS];
 #include <Wire.h>
 #define PWMPIN 6
 int PWM = 0;
-float amps;
-float volts;
+float amps, volts, watts;
 unsigned long currentTime;
 
 /*String readAmps() {
@@ -119,6 +118,12 @@ String readPower() {
 //******************** THERMISTOR ***********************
 
 float temperature;
+
+
+//******************** Gate switch ***********************
+#define gateSwitchPin 7
+bool gateSwitch;
+
 
 //******************** Selector ***********************
 
@@ -182,8 +187,11 @@ void setup() {
   
   display.init();
   display.flipScreenVertically();   //flip display option !!!
-  display.display();
-  delay(200);
+  for(int i = 0; i<101; i++){
+    display.drawProgressBar(10, 15, 98, 10, i);
+    display.display();
+    delay(10);
+  }
 
   pinMode(9, INPUT);
   pinMode(PWMPIN, OUTPUT);  //pwm
@@ -191,6 +199,9 @@ void setup() {
   //digitalWrite(0, HIGH);
   pinMode(pinSelectorMoveA, INPUT);
   pinMode(pinSelectorMoveB, INPUT);
+  pinMode(pinSelectorButton, INPUT);
+  pinMode(gateSwitchPin, INPUT);
+
 
 
   analogSetAttenuation(ADC_2_5db);  //https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/
@@ -233,42 +244,42 @@ void setup() {
     
     server.on("/readA", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readAmps(&amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readV", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readvolts(&volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readP", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readPower(&volts, &amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(watts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/readT", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readTemp(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/current", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readAmps(&amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/tension", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readvolts(&volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/power", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readPower(&volts, &amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(watts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest *request) {
       //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", readTemp(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
     });
 
     server.begin();
@@ -313,7 +324,7 @@ void setup() {
           }
         }
       }
-      request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + String(WiFi.localIP()));// + ip);
+      request->send(200, "text/plain", "Done. ESP will restart, connect to your router. Connecto to IP indicated on oled screen.");// + ip);
       delay(1000);
       ESP.restart();
     });
@@ -324,12 +335,12 @@ void setup() {
 
   currentTime = millis();
 
-  delay(100);
+  delay(1000);
   //analogWrite(PWMPIN,10);
   IPAddress myIP = WiFi.localIP();
   String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
   imprimeixOled(adresa, display);  //String(random(10)), display);
-
+  while(digitalRead(pinSelectorButton)){}
 
   // encoder
   //encoder.begin();                                                           //set encoders pins as input & enable built-in pullup resistors
@@ -338,12 +349,19 @@ void setup() {
   //attachInterrupt(digitalPinToInterrupt(pinSelectorMoveB), doEncode, RISING);
   attachInterrupt(digitalPinToInterrupt(pinSelectorButton), encoderButton, FALLING); //call encoderButtonISR() every high->low              changes
 
+  
 }
 
 void loop(){
 
+  readAmps(&amps);
+  readvolts(&volts);
+  readPower(&volts, &amps, &watts);
+  readTemp(&temperature);
+  readSwitch(&gateSwitch, digitalRead(gateSwitchPin));
+
   //imprimeixOled(String(position), display);
-  if (counter != ISRCounter)
+  /*if (counter != ISRCounter)
   {
     counter = ISRCounter;
     Serial.println(counter);
@@ -354,9 +372,9 @@ void loop(){
     imprimeixOled("PRESSED", display);
     button = false;
     delay(20);
-  }
+  }*/
   //delay(100);
-  Serial.print('.');
+  //Serial.print('.');
   /*if ((currentTime +1000) <= millis()){
     //Serial.print(i++);
     //Serial.print(" - ");
@@ -404,17 +422,17 @@ void loop(){
     */
  //   currentTime = millis();
 //  }
+  //Serial.println(gateSwitch);
+  imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
 
-
-
-  if(temperature > 60){
+  if(temperature > 50){
     digitalWrite(0, HIGH);
   }else{
     digitalWrite(0, LOW);
     analogWrite(PWMPIN,PWM);
   }
 
-  if(temperature > 80){
+  if(temperature > 100){
     analogWrite(PWMPIN,0); 
   }
   
@@ -434,7 +452,7 @@ void loop(){
   
   
   
-  delay(50);
+  delay(100);
 
 }
 

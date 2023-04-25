@@ -67,7 +67,7 @@ setInterval(function() {
       title: { text: 'Ampers [A]' },
       //title: { text: 'Temperature (Fahrenheit)' }
       min: 0,
-      max: 5
+      max: 6
     },
     credits: { enabled: false }
   });
@@ -150,7 +150,7 @@ setInterval(function() {
     yAxis: {
       title: { text: 'Watts [W]' },
       min: 0,
-      max: 60
+      max: 65
     },
     credits: { enabled: false }
   });
