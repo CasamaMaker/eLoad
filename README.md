@@ -49,7 +49,8 @@ The __Electronic Load - 60W__ has several features that make it a practical and 
 
 ## Monitoring web
 When you plug in the USB power to eLoad electronics, it will start and in a few seconds will show a IP (if it can connecto to the wifi) or it wil generate an AP wifi (where you can configure wifi, if you want). At any case, you will see this website.
-![image](https://github.com/CanMarques/eLoad/tree/main/hardware/pictures/gift-web.mp4)
+
+![](https://github.com/CanMarques/eLoad/blob/main/hardware/pictures/gift-web.mp4)
 
 ---
 
