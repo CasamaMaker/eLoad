@@ -74,46 +74,6 @@ int PWM = 0;
 float amps, volts, watts;
 unsigned long currentTime;
 
-/*String readAmps() {
-  float sumaDeu;
-  for(int i=10;i>0;i--){
-    amps = 4*analogRead(1)*3.3/4095;
-    sumaDeu += amps;
-  }
-  amps = sumaDeu/10;
-  return String(amps);
-}*/
-
-/*String readAmps() {
-  float Vref = 1.1;
-  float amplification = 4.0;
-  float resistance = 0.05;
-
-  float Vadc = (Vref / 4095.0) * analogRead(1); // Calcula el voltaje en la entrada analógica
-  float voltage = Vadc /4; // Calcula el voltaje real en el divisor de voltaje
-  amps = voltage / resistance;
-
-  return String(amps);
-}
-
-String readvolts() {
-  float Vref = 1.1; // Tensión de referencia del ADC
-  float R1 = 25500.0; // Valor de la resistencia R1 del divisor de voltaje
-  float R2 = 1000.0; // Valor de la resistencia R2 del divisor de voltaje
-  float bits = analogRead(3)*1.02;
-  float Vadc = (Vref / 4095.0) * bits; // Calcula el voltaje en la entrada analógica
-  volts = Vadc * (R1 + R2) / R2; // Calcula el voltaje real en el divisor de voltaje
-  return String(volts);
-}
-
-String readPower() {
-  return String(volts*amps);
-}
-*/
-
-
-
-
 
 //******************** THERMISTOR ***********************
 
@@ -143,16 +103,6 @@ bool IsCW = true;
 
 void doEncode()
 {
-  /*if (millis() > timeCounter + timeThreshold){
-    if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB)){
-      ISRCounter++;
-    }else{
-      ISRCounter--;
-    }
-    timeCounter = millis();
-  }*/
-    
-
   if (millis() > timeCounter + timeThreshold)
   {
     if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB))
@@ -170,6 +120,7 @@ void doEncode()
     timeCounter = millis();
   }
 }
+
 bool botoInici = false;
 void encoderButton(){
   if (millis() > timeCounter + timeThreshold){
@@ -391,12 +342,16 @@ void loop(){
 
   imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
 
-  Serial.println(">");
-  if(temperature > 50) digitalWrite(0, HIGH);
-  if(temperature > 80) analogWrite(PWMPIN,0); 
-  if(temperature < 40) digitalWrite(0, LOW);
-  if(temperature < 60) analogWrite(PWMPIN,PWM);
-
+  //Serial.println(">");
+  if(temperature > 50) digitalWrite(0, HIGH); //Start fan
+  if(temperature > 80) analogWrite(PWMPIN,0); //Stop mosfet as load
+  if(temperature < 40) digitalWrite(0, LOW);  //Stop fan
+  if(temperature < 60) analogWrite(PWMPIN,PWM);//Restart mosfet
+  if(watts > 65){
+    PWM -=10;
+    analogWrite(PWMPIN,PWM);       //Restart mosfet
+  }
+  if(watts < 60) analogWrite(PWMPIN,PWM);//Restart mosfet
 
   
   if (Serial.available() > 0) {
