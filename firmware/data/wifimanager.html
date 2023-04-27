@@ -1,27 +1,31 @@
-<html lang="es"><head></head><body>&lt;
-  <!DOCTYPE html>
-  <html>
+<html lang="es">
   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <link rel="stylesheet" type="text/css" href="style.css">
-      <script type="text/javascript" src="script.js"></script>
-      <title>ESP Wi-Fi Manager</title>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <script type="text/javascript" src="script.js"></script>
+        <title>ESP Wi-Fi Manager</title>
+      </head>
+      <body>
+        <div class="container">
+          <header>
+            <h1>ESP Wi-Fi Manager</h1>
+          </header>
+          <form action="/" method="POST">
+            <label for="ssid">SSID:</label>
+            <input type="text" id="ssid" name="ssid" />
 
-      <div class="container">
-        <h1 class="title">ESP Wi-Fi Manager</h1>
-        <form action="/" method="POST">
-          <label for="ssid">SSID:</label>
-          <input type="text" id="ssid" name="ssid">
-  
-          <label for="password">Contraseña:</label>
-          <input type="text" id="pass" name="pass">
-  
-          <input type="submit" value="Enviar">
-        </form>
-      </div>
-    
-      
-  
-  </body></html>
+            <label for="password">Password:</label>
+            <input type="text" id="pass" name="pass" />
+
+            <input type="submit" value="Submit" />
+          </form>
+        </div>
+      </body>
+    </html>
+  </head>
+</html>

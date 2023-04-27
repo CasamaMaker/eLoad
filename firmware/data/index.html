@@ -1,37 +1,66 @@
-<!DOCTYPE HTML><html>
-<!-- Martí Casamayor - Complete project details at https://github.com/RaspiGame/eLoad 
+<!DOCTYPE html>
+<html>
+  <!-- Martí Casamayor - Complete project details at https://github.com/RaspiGame/eLoad 
 MIT License  https://github.com/RaspiGame/eLoad/blob/main/LICENSE-->
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+  </head>
 
-<body>
-  <div class="container">
-		<h1><a href="https://github.com/RaspiGame/eLoad">eLoad</a>
-      <button id="myButton">wifi configuration</button>
-    </h1>
+  <body>
+    <div class="container">
+      <header>
+        <h1>eLoad</h1>
+        <div>
+          <button id="myButton">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M0 7.244c3.071-3.24 7.314-5.244 12-5.244 4.687 0 8.929 2.004 12 5.244l-2.039 2.15c-2.549-2.688-6.071-4.352-9.961-4.352s-7.412 1.664-9.961 4.352l-2.039-2.15zm5.72 6.034c1.607-1.696 3.827-2.744 6.28-2.744s4.673 1.048 6.28 2.744l2.093-2.208c-2.143-2.261-5.103-3.659-8.373-3.659s-6.23 1.398-8.373 3.659l2.093 2.208zm3.658 3.859c.671-.708 1.598-1.145 2.622-1.145 1.023 0 1.951.437 2.622 1.145l2.057-2.17c-1.197-1.263-2.851-2.044-4.678-2.044s-3.481.782-4.678 2.044l2.055 2.17zm2.622 1.017c-1.062 0-1.923.861-1.923 1.923s.861 1.923 1.923 1.923 1.923-.861 1.923-1.923-.861-1.923-1.923-1.923z"
+              />
+            </svg>
+            <span>wifi configuration</span>
+          </button>
+          <a href="https://github.com/RaspiGame/eLoad">
+            <button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                />
+              </svg>
+              <span>source code</span>
+            </button></a
+          >
+        </div>
+      </header>
+      <h2>Values:</h2>
+      <div class="values">
+        <p>Voltage: <span id="ADCV"></span></p>
+        <p>Current: <span id="ADCA"></span></p>
+        <p>Power: <span id="ADCP"></span></p>
+        <p>Temperature: <span id="ADCT"></span></p>
+      </div>
 
-		<div class="values">
-			<h2>Values:</h2>
-			<p>Voltage: <span id="ADCV"></span></p>
-			<p>Current: <span id="ADCA"></span></p>
-			<p>Power: <span id="ADCP"></span></p>
-			<p>Temperature: <span id="ADCT"></span></p>
-		</div>
+      <div>
+        <h2>Last 5 minutes:</h2>
 
-		<div>
-			<h2>Last 5 minutes:</h2>
-        
         <div id="chart-temperature" class="container"></div>
         <div id="chart-humidity" class="container"></div>
         <div id="chart-pressure" class="container"></div>
-		<div id="chart-ttt" class="container"></div>
+        <div id="chart-ttt" class="container"></div>
+      </div>
+    </div>
+  </body>
 
-		</div>
-	</div>
-</body>
-
-<script type="text/javascript" src="script.js"></script>
+  <script type="text/javascript" src="script.js"></script>
 </html>
