@@ -6,24 +6,55 @@ body {
 }
 .container {
   max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  margin: 0 auto 20px auto;
 }
 h1 {
   text-align: center;
   margin-top: 0;
-  color: #333;
+  color: #1a5276;
+  margin: 0;
+  margin-left: 20px;
 }
 h2 {
   margin-top: 20px;
   margin-bottom: 10px;
+  margin-left: 20px;
   color: #666;
+}
+header {
+  display: flex;
+  height: 50px;
+  padding: 20px 0;
+  justify-content: space-between;
+  align-items: center;
+}
+header div {
+  display: flex;
+  gap: 5px;
+}
+header a {
+  text-decoration: none;
+}
+header button {
+  display: flex;
+  gap: 6px;
+  font-size: 16px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ddd;
+}
+header button:hover {
+  background-color: #999;
+}
+header button span {
+  line-height: 24px;
 }
 .values {
   background-color: #fff;
-  padding: 10px;
+  padding: 20px;
   border-radius: 5px;
-  box-shadow: 0px 0px 5px #ccc;
 }
 .values p {
   margin: 0;
@@ -41,9 +72,6 @@ canvas {
   border-radius: 5px;
   box-shadow: 0px 0px 5px #ccc;
 }
-
-
-
 
 /*body {
   background-color: #333;
@@ -72,7 +100,7 @@ canvas {
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #1A5276; 
+  color: #1a5276;
   text-shadow: 1px 1px #ccc;
 }
 
@@ -91,7 +119,7 @@ input[type="password"] {
   margin-bottom: 20px;
   border: none;
   border-radius: 5px;
-  box-shadow: 0px 0px 5px #ccc;
+  /* box-shadow: 0px 0px 5px #ccc; */
   font-size: 16px;
   color: #555;
 }
@@ -102,7 +130,7 @@ input[type="submit"] {
   padding: 10px;
   border: none;
   border-radius: 5px;
-  background-color: #1A5276; 
+  background-color: #999;
   color: #fff;
   font-size: 18px;
   font-weight: bold;
@@ -112,5 +140,9 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
-  background-color: #154360;
+  background-color: #aaa;
+}
+
+form {
+  padding: 20px;
 }
