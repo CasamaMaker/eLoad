@@ -1,18 +1,24 @@
 #include <Arduino.h>
 
 
+//******************* PINOUT ********************//
+#define FAN_PIN               0
+#define ISENSE_PIN            1
+#define DIGITAL_LED_PIN       2
+#define VSENSE_PIN            3 
+#define TSENSE_PIN            4
+#define MOSFET_PIN            6
+#define GATE_SWITCH_PIN       7
+#define PWM_PIN               6
+#define SELECTOR_MOVE_B_PIN   8
+#define SELECTOR_BUTTON_PIN   9
+#define SELECTOR_MOVE_A_PIN   10
+
+
 //******************* PANTALLA OLED ********************//
 #include "SSD1306Wire.h"
 #include "pantallaOled.h"
-SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
-
-
-
-
-
-
-
-
+SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);
 
 
 //***************** WIFI MANAGER **********************//
@@ -21,102 +27,56 @@ SSD1306Wire display(0x3c, 21, 20, GEOMETRY_128_32);   // ADDRESS, SDA, SCL  -  S
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include "SPIFFS.h"
-
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
-
-// Search for parameter in HTTP POST request
-const char* PARAM_INPUT_1 = "ssid";
+AsyncWebServer server(80);  // Create AsyncWebServer object on port 80
+const char* PARAM_INPUT_1 = "ssid";// Search for parameter in HTTP POST request
 const char* PARAM_INPUT_2 = "pass";
-
-//Variables to save values from HTML form
-String ssid;
+String ssid;//Variables to save values from HTML form
 String pass;
-
-// File paths to save input values permanently
-const char* ssidPath = "/ssid.txt";
+const char* ssidPath = "/ssid.txt";// File paths to save input values permanently
 const char* passPath = "/pass.txt";
-
 IPAddress localIP;
-
-// Timer variables
-unsigned long previousMillis = 0;
+unsigned long previousMillis = 0;// Timer variables
 const long interval = 10000;  // interval to wait for Wi-Fi connection (milliseconds)
-
-// Set LED GPIO
-const int ledPin = 2;
-// Stores LED state
-
-String ledState;
-//***********************************************************
-
 
 
 //****************** DIGITAL LED ******************************
-#include <FastLED.h>
+/*#include <FastLED.h>
 #define NUM_LEDS 1
 #define DATA_PIN 2
 #define BRIGHTNESS  15
-CRGB leds[NUM_LEDS];
-//***********************************************************
-
-
-
-
-
+CRGB leds[NUM_LEDS];*/
 
 
 //********************** SENSING *******************
 #include "sense.h"
 #include <Wire.h>
-#define PWMPIN 6
 int PWM = 0;
-float amps, volts, watts;
+float amps, volts, watts;   //eload measurements
 unsigned long currentTime;
-
-
-//******************** THERMISTOR ***********************
-
-float temperature;
-
-
-//******************** Gate switch ***********************
-#define gateSwitchPin 7
-bool gateSwitch;
-
-
-//******************** Selector ***********************
-
+float temperature;          //ntc
+bool gateSwitch;            //switch sense
 #include <RotaryEncoder.h>
-const int pinSelectorMoveA = 10;
-const int pinSelectorMoveB = 8;
-const int pinSelectorButton = 9;
-const int timeThreshold = 5;
+#define timeThreshold 5
 long timeCounter = 0;
-
 const int maxSteps = 255;
 volatile int ISRCounter = 0;
 int counter = 0;
 bool button;
-
 bool IsCW = true;
 
-void doEncode()
-{
-  if (millis() > timeCounter + timeThreshold)
-  {
-    if (digitalRead(pinSelectorMoveA) == digitalRead(pinSelectorMoveB))
-    {
+
+//******************** SELECTOR ***********************
+void doEncode(){
+  if (millis() > timeCounter + timeThreshold){
+    if (digitalRead(SELECTOR_MOVE_A_PIN) == digitalRead(SELECTOR_MOVE_B_PIN)){
       IsCW = true;
       if (ISRCounter + 1 <= maxSteps) ISRCounter++;
-    }
-    else
-    {
+    }else{
       IsCW = false;
       if (ISRCounter - 1 > 0) ISRCounter--;
     }
     PWM = ISRCounter;
-    analogWrite(PWMPIN,PWM);
+    analogWrite(PWM_PIN,PWM);
     timeCounter = millis();
   }
 }
@@ -127,12 +87,11 @@ void encoderButton(){
     button = true;
     timeCounter = millis();
   }
-  //botoInici=true;
 }
 
 
 
-//******************** Timer interruption ***********************
+//******************** TIMER INTERRUPTION ***********************
 #define TIMER_INTERRUPT_DEBUG         0
 #define _TIMERINTERRUPT_LOGLEVEL_     4
 #include "ESP32_C3_TimerInterrupt.h"
@@ -145,8 +104,6 @@ bool IRAM_ATTR TimerHandler0(void * timerNo)
 	digitalWrite(PIN_D39, toggle0);
 	toggle0 = !toggle0;
 */
-
-  
 	return true;
 }
 
@@ -154,118 +111,89 @@ bool IRAM_ATTR TimerHandler0(void * timerNo)
 ESP32Timer ITimer0(0);
 
 
-String hostname = "my-esp32";
-
+//******************** SETUP ****************************** SETUP **************************** SETUP **********************************
 void setup() {
   
-  Serial.begin(115200);
-  Serial.println("holaa");
-  
-  display.init();
+  Serial.begin(115200);       //Serial config
+
+  display.init();             //oled config
   display.flipScreenVertically();   //flip display option !!!
-  for(int i = 0; i<101; i++){
-    display.drawProgressBar(10, 15, 98, 10, i);
-    display.display();
-    delay(10);
-  }
 
-  pinMode(9, INPUT);
-  pinMode(PWMPIN, OUTPUT);  //pwm
-  pinMode(0, OUTPUT);       //fan
+  pinMode(FAN_PIN, OUTPUT);       //Cooling fan
+  pinMode(PWM_PIN, OUTPUT);  //pwm
+  
   //digitalWrite(0, HIGH);
-  pinMode(pinSelectorMoveA, INPUT);
-  pinMode(pinSelectorMoveB, INPUT);
-  pinMode(pinSelectorButton, INPUT);
-  pinMode(gateSwitchPin, INPUT);
-
-
+  pinMode(SELECTOR_MOVE_A_PIN, INPUT);
+  pinMode(SELECTOR_MOVE_B_PIN, INPUT);
+  pinMode(SELECTOR_BUTTON_PIN, INPUT);
+  pinMode(GATE_SWITCH_PIN, INPUT);
 
   analogSetAttenuation(ADC_2_5db);  //https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/
 
 
-  //WiFi.setHostname("my-esp32");
-  WiFi.setHostname(hostname.c_str());
+  //WiFi.setHostname("my-esp32"); //not work
 
-
-  FastLED.addLeds<WS2812B, DATA_PIN>(leds, NUM_LEDS);      //NEOPIXEL
+  //FastLED.addLeds<WS2812B, DATA_PIN>(leds, NUM_LEDS);      //NEOPIXEL
   //leds[0] = CRGB::Green;
   //FastLED.setBrightness( BRIGHTNESS );
   //FastLED.show();
   //FastLED.delay(8);
 
 
-
-
+//******************** SPIFFS ***********************
   initSPIFFS();
-
-  // Set GPIO 2 as an OUTPUT
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
-  
   // Load values saved in SPIFFS
   ssid = readFile(SPIFFS, ssidPath);
   pass = readFile(SPIFFS, passPath);
-  Serial.println(ssid);
-  Serial.println(pass);
+  //Serial.println(ssid);
+  //Serial.println(pass);
 
 
-
-  if(initWiFi(ssid, pass, previousMillis, interval)) {  //******************************
-    // Route for root / web page
-      
+//****************************** WEB PAGE ***********************
+  if(initWiFi(ssid, pass, previousMillis, interval)) {  
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
       request->send(SPIFFS, "/index.html", "text/html");
     });
+
     server.serveStatic("/", SPIFFS, "/");
-    
+
     server.on("/readA", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(amps).c_str());
     });
 
     server.on("/readV", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(volts).c_str());
     });
 
     server.on("/readP", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(watts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(watts).c_str());
     });
 
     server.on("/readT", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(temperature).c_str());
     });
 
     server.on("/current", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(amps).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(amps).c_str());
     });
 
     server.on("/tension", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(volts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(volts).c_str());
     });
 
     server.on("/power", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(watts).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(watts).c_str());
     });
 
     server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest *request) {
-      //digitalWrite(ledPin, HIGH);
-      request->send_P(200, "text/plain", String(temperature).c_str());  //"/graphic.html", "text/html", numerorandom().c_str());
+      request->send_P(200, "text/plain", String(temperature).c_str());
     });
 
     server.begin();
-  }
-  else {
-    // Connect to Wi-Fi network with SSID and password ************************************
-    Serial.println("Setting AP (Access Point)");
-    // NULL sets an open Access Point
-    WiFi.softAP("ESP-WIFI-MANAGER", NULL);
+  }else{  // Creating AP wifi with web server
+    
 
+    WiFi.softAP("ESP-WIFI-MANAGER", NULL);
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(IP); 
@@ -282,25 +210,21 @@ void setup() {
       for(int i=0;i<params;i++){
         AsyncWebParameter* p = request->getParam(i);
         if(p->isPost()){
-          // HTTP POST ssid value
           if (p->name() == PARAM_INPUT_1) {
             ssid = p->value().c_str();
             Serial.print("SSID set to: ");
             Serial.println(ssid);
-            // Write file to save value
-            writeFile(SPIFFS, ssidPath, ssid.c_str());
+            writeFile(SPIFFS, ssidPath, ssid.c_str());  // Write file to save value
           }
-          // HTTP POST pass value
           if (p->name() == PARAM_INPUT_2) {
             pass = p->value().c_str();
             Serial.print("Password set to: ");
             Serial.println(pass);
-            // Write file to save value
-            writeFile(SPIFFS, passPath, pass.c_str());
+            writeFile(SPIFFS, passPath, pass.c_str());  // Write file to save value
           }
         }
       }
-      request->send(200, "text/plain", "Done. ESP will restart, connect to your router. Connecto to IP indicated on oled screen.");// + ip);
+      request->send(200, "text/plain", "Done. ESP will restart, connect to your router. Connect to IP indicated on oled screen.");// + ip);
       delay(1000);
       ESP.restart();
     });
@@ -308,52 +232,53 @@ void setup() {
   }
 
 
-
-  currentTime = millis();
-
   delay(1000);
-  //analogWrite(PWMPIN,10);
+  currentTime = millis();
+  
+
   IPAddress myIP = WiFi.localIP();
   String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
-  imprimeixOled(adresa, display);  //String(random(10)), display);
+  imprimeixOled(adresa, display);
   
-  while(digitalRead(pinSelectorButton)){}
-  //botoInici = false;
-  // encoder
-  //encoder.begin();                                                           //set encoders pins as input & enable built-in pullup resistors
+  while(digitalRead(SELECTOR_BUTTON_PIN)){}
 
-  attachInterrupt(digitalPinToInterrupt(pinSelectorMoveA), doEncode, RISING);  //call encoderISR()       every high->low or low->high changes
-  //attachInterrupt(digitalPinToInterrupt(pinSelectorMoveB), doEncode, RISING);
-  attachInterrupt(digitalPinToInterrupt(pinSelectorButton), encoderButton, FALLING); //call encoderButtonISR() every high->low              changes
-  
-  
 
+//******************** START INTERRUPTIONS ***********************
+  attachInterrupt(digitalPinToInterrupt(SELECTOR_MOVE_A_PIN), doEncode, RISING);
+  //attachInterrupt(digitalPinToInterrupt(SELECTOR_MOVE_B_PIN), doEncode, RISING);
+  attachInterrupt(digitalPinToInterrupt(SELECTOR_BUTTON_PIN), encoderButton, FALLING);
   ITimer0.attachInterruptInterval(TIMER0_INTERVAL_MS * 1000, TimerHandler0);
   
 }
 
+
+//******************** LOOP ****************************** LOOP **************************** LOOP **********************************
 void loop(){
 
+
+//******************** MONITORING ***********************
   readAmps(&amps);
   readvolts(&volts);
   readPower(&volts, &amps, &watts);
   readTemp(&temperature);
-  readSwitch(&gateSwitch, digitalRead(gateSwitchPin));
+  readSwitch(&gateSwitch, digitalRead(GATE_SWITCH_PIN));
 
   imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
 
-  //Serial.println(">");
-  if(temperature > 50) digitalWrite(0, HIGH); //Start fan
-  if(temperature > 80) analogWrite(PWMPIN,0); //Stop mosfet as load
-  if(temperature < 40) digitalWrite(0, LOW);  //Stop fan
-  if(temperature < 60) analogWrite(PWMPIN,PWM);//Restart mosfet
+
+//******************** PROTECTIONS ***********************
+  if(temperature > 50) digitalWrite(FAN_PIN, HIGH);     //Start fan
+  if(temperature > 80) analogWrite(PWM_PIN,0);          //Stop mosfet as load
+  if(temperature < 40) digitalWrite(FAN_PIN, LOW);      //Stop fan
+  if(temperature < 60) analogWrite(PWM_PIN,PWM);        //Restart mosfet
   if(watts > 65){
     PWM -=10;
-    analogWrite(PWMPIN,PWM);       //Restart mosfet
+    analogWrite(PWM_PIN,PWM);       //Restart mosfet
   }
-  if(watts < 60) analogWrite(PWMPIN,PWM);//Restart mosfet
+  if(watts < 60) analogWrite(PWM_PIN,PWM);//Restart mosfet
 
   
+//******************** SERIAL PWM ***********************
   if (Serial.available() > 0) {
     int incomingvalue = Serial.parseInt();    
     if(incomingvalue > 0){
@@ -362,15 +287,10 @@ void loop(){
       }else{
         PWM = incomingvalue;
       } 
-      analogWrite(PWMPIN,PWM);           
+      analogWrite(PWM_PIN,PWM);           
     }
     
   }
-
-  
-  
-  
   delay(100);
-
 }
 
