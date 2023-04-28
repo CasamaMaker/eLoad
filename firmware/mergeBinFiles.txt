@@ -1,0 +1,7 @@
+https://docs.platformio.org/en/latest/integration/ide/vscode.html#project-tasks
+
+0x0000		C:\Users\marca\Documents\GitHub\eLoad\firmware\.pio\build\arduino-esp32c3\bootloader.bin
+0x8000 		C:\Users\marca\Documents\GitHub\eLoad\firmware\.pio\build\arduino-esp32c3\partitions.bin
+0xe000 		C:\Users\marca\.platformio\packages\framework-arduinoespressif32\tools\partitions\boot_app0.bin
+0x10000 	C:\Users\marca\Documents\GitHub\eLoad\firmware\.pio\build\arduino-esp32c3\firmware.bin
+0x310000	C:\Users\marca\Documents\GitHub\eLoad\firmware\.pio\build\arduino-esp32c3\spiffs.bin

@@ -37,7 +37,7 @@ const char* passPath = "/pass.txt";
 IPAddress localIP;
 unsigned long previousMillis = 0;// Timer variables
 const long interval = 10000;  // interval to wait for Wi-Fi connection (milliseconds)
-
+String adresa;
 
 //****************** DIGITAL LED ******************************
 /*#include <FastLED.h>
@@ -53,6 +53,7 @@ CRGB leds[NUM_LEDS];*/
 int PWM = 0;
 float amps, volts, watts;   //eload measurements
 unsigned long currentTime;
+#define oneSecondTime 1000
 float temperature;          //ntc
 bool gateSwitch;            //switch sense
 #include <RotaryEncoder.h>
@@ -87,6 +88,8 @@ void encoderButton(){
     button = true;
     timeCounter = millis();
   }
+  botoInici=true;
+  //Serial.print("*****"); 
 }
 
 
@@ -98,29 +101,37 @@ void encoderButton(){
 
 bool IRAM_ATTR TimerHandler0(void * timerNo)
 {
-	/*static bool toggle0 = false;
+//******************** PROTECTIONS ***********************
+  if(temperature > 50) digitalWrite(FAN_PIN, HIGH);     //Start fan
+  if(temperature < 40) digitalWrite(FAN_PIN, LOW);      //Stop fan
+  if(temperature > 70) analogWrite(PWM_PIN,0);          //Stop mosfet as load
+  if(temperature < 60) analogWrite(PWM_PIN,PWM);        //Restart mosfet
+  if(watts > 65){
+    PWM -=10;
+    analogWrite(PWM_PIN,PWM);                           //Restart mosfet
+  }
+  //if(watts < 60) analogWrite(PWM_PIN,PWM);              //Restart mosfet
+  if(!gateSwitch) analogWrite(PWM_PIN,0);
 
-	//timer interrupt toggles pin PIN_D39
-	digitalWrite(PIN_D39, toggle0);
-	toggle0 = !toggle0;
-*/
+
 	return true;
 }
 
-#define TIMER0_INTERVAL_MS        1000   //1000
+#define TIMER0_INTERVAL_MS        1000
 ESP32Timer ITimer0(0);
 
 
 //******************** SETUP ****************************** SETUP **************************** SETUP **********************************
 void setup() {
   
-  Serial.begin(115200);       //Serial config
+  //Serial.begin(115200);             //Serial config
 
-  display.init();             //oled config
+  display.init();                   //oled config
   display.flipScreenVertically();   //flip display option !!!
+  imprimeixOled("eLOAD v1", display);
 
-  pinMode(FAN_PIN, OUTPUT);       //Cooling fan
-  pinMode(PWM_PIN, OUTPUT);  //pwm
+  pinMode(FAN_PIN, OUTPUT);         //Cooling fan
+  pinMode(PWM_PIN, OUTPUT);         //pwm
   
   //digitalWrite(0, HIGH);
   pinMode(SELECTOR_MOVE_A_PIN, INPUT);
@@ -131,13 +142,7 @@ void setup() {
   analogSetAttenuation(ADC_2_5db);  //https://randomnerdtutorials.com/esp32-adc-analog-read-arduino-ide/
 
 
-  //WiFi.setHostname("my-esp32"); //not work
-
-  //FastLED.addLeds<WS2812B, DATA_PIN>(leds, NUM_LEDS);      //NEOPIXEL
-  //leds[0] = CRGB::Green;
-  //FastLED.setBrightness( BRIGHTNESS );
-  //FastLED.show();
-  //FastLED.delay(8);
+  //WiFi.setHostname("my-esp32");   //not work
 
 
 //******************** SPIFFS ***********************
@@ -145,8 +150,6 @@ void setup() {
   // Load values saved in SPIFFS
   ssid = readFile(SPIFFS, ssidPath);
   pass = readFile(SPIFFS, passPath);
-  //Serial.println(ssid);
-  //Serial.println(pass);
 
 
 //****************************** WEB PAGE ***********************
@@ -193,10 +196,10 @@ void setup() {
   }else{  // Creating AP wifi with web server
     
 
-    WiFi.softAP("ESP-WIFI-MANAGER", NULL);
+    WiFi.softAP("eLOAD-WIFI", NULL);
     IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP); 
+    //Serial.print("AP IP address: ");
+    //Serial.println(IP); 
 
     // Web Server Root URL
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -212,14 +215,14 @@ void setup() {
         if(p->isPost()){
           if (p->name() == PARAM_INPUT_1) {
             ssid = p->value().c_str();
-            Serial.print("SSID set to: ");
-            Serial.println(ssid);
+            //Serial.print("SSID set to: ");
+            //Serial.println(ssid);
             writeFile(SPIFFS, ssidPath, ssid.c_str());  // Write file to save value
           }
           if (p->name() == PARAM_INPUT_2) {
             pass = p->value().c_str();
-            Serial.print("Password set to: ");
-            Serial.println(pass);
+            //Serial.print("Password set to: ");
+            //Serial.println(pass);
             writeFile(SPIFFS, passPath, pass.c_str());  // Write file to save value
           }
         }
@@ -233,22 +236,20 @@ void setup() {
 
 
   delay(1000);
-  currentTime = millis();
-  
 
   IPAddress myIP = WiFi.localIP();
-  String adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
-  imprimeixOled(adresa, display);
-  
-  while(digitalRead(SELECTOR_BUTTON_PIN)){}
-
-
-//******************** START INTERRUPTIONS ***********************
+  adresa = String(myIP[0]) + String(".") + String(myIP[1]) + String(".") + String(myIP[2]) + String(".") + String(myIP[3])  ;
+  //imprimeixOled(adresa, display);
+  botoInici=false;
+ 
+  //******************** START INTERRUPTIONS ***********************
   attachInterrupt(digitalPinToInterrupt(SELECTOR_MOVE_A_PIN), doEncode, RISING);
   //attachInterrupt(digitalPinToInterrupt(SELECTOR_MOVE_B_PIN), doEncode, RISING);
   attachInterrupt(digitalPinToInterrupt(SELECTOR_BUTTON_PIN), encoderButton, FALLING);
   ITimer0.attachInterruptInterval(TIMER0_INTERVAL_MS * 1000, TimerHandler0);
-  
+
+
+  currentTime = millis();
 }
 
 
@@ -263,23 +264,24 @@ void loop(){
   readTemp(&temperature);
   readSwitch(&gateSwitch, digitalRead(GATE_SWITCH_PIN));
 
-  imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
-
-
-//******************** PROTECTIONS ***********************
-  if(temperature > 50) digitalWrite(FAN_PIN, HIGH);     //Start fan
-  if(temperature > 80) analogWrite(PWM_PIN,0);          //Stop mosfet as load
-  if(temperature < 40) digitalWrite(FAN_PIN, LOW);      //Stop fan
-  if(temperature < 60) analogWrite(PWM_PIN,PWM);        //Restart mosfet
-  if(watts > 65){
-    PWM -=10;
-    analogWrite(PWM_PIN,PWM);       //Restart mosfet
+  if(millis() >= (currentTime + oneSecondTime)){
+    if(botoInici != true){
+      if(adresa!="0.0.0.0"){
+        imprimeixOled(adresa, display);
+      }else{
+        imprimeixOled("AP: 192.168.4.1", display);
+      }
+    }else{
+      imprimeixOledValors(&amps, &volts, &watts, &gateSwitch, display);
+    }
+    currentTime = millis();
   }
-  if(watts < 60) analogWrite(PWM_PIN,PWM);//Restart mosfet
+
+
 
   
 //******************** SERIAL PWM ***********************
-  if (Serial.available() > 0) {
+/*  if (Serial.available() > 0) {
     int incomingvalue = Serial.parseInt();    
     if(incomingvalue > 0){
       if(incomingvalue == 300){
@@ -290,7 +292,8 @@ void loop(){
       analogWrite(PWM_PIN,PWM);           
     }
     
-  }
+  }*/
+
   delay(100);
 }
 
