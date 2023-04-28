@@ -50,7 +50,18 @@ The __Electronic Load - 60W__ has several features that make it a practical and 
 ## Monitoring web
 When you plug in the USB power to eLoad electronics, it will start and in a few seconds will show a IP (if it can connecto to the wifi) or it wil generate an AP wifi (where you can configure wifi, if you want). At any case, you will see this website.
 
-![](https://github.com/CanMarques/eLoad/blob/main/hardware/pictures/gift-web.gif)
+![web](firmware/screenshots/web.png)
+
+---
+
+## Burning firmware
+There are two different ways to do that, the easy&fast (using bin file) or the advance (using PlatformUO)
+
+### Easy&Fast
+- Download [Last eLoad Release](https://github.com/CanMarques/eLoad/releases)
+- Download [Flash Download Tools](https://www.espressif.com/en/support/download/other-tools?keys=flash+download+tools) from ESPRESSIF
+- Open Flash Download Tools -> _ESP32-C3 / Develop / USB_
+![web](firmware/screenshots/burnSingleFile.png)
 
 ---
 
