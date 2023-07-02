@@ -94,24 +94,26 @@ void encoderButton(){
 
 
 
+
 //******************** TIMER INTERRUPTION ***********************
 #define TIMER_INTERRUPT_DEBUG         0
 #define _TIMERINTERRUPT_LOGLEVEL_     4
 #include "ESP32_C3_TimerInterrupt.h"
-
+float lastTemperature;
 bool IRAM_ATTR TimerHandler0(void * timerNo)
 {
 //******************** PROTECTIONS ***********************
-  if(temperature > 50) digitalWrite(FAN_PIN, HIGH);     //Start fan
+  if(temperature > 40) digitalWrite(FAN_PIN, HIGH);     //Start fan
   if(temperature < 40) digitalWrite(FAN_PIN, LOW);      //Stop fan
-  if(temperature > 70) analogWrite(PWM_PIN,0);          //Stop mosfet as load
+  if(temperature > 120) analogWrite(PWM_PIN,0);          //Stop mosfet as load
+  //if(temperature > lastTemperature + 10) analogWrite(PWM_PIN,PWM/2);
   if(temperature < 60) analogWrite(PWM_PIN,PWM);        //Restart mosfet
   if(watts > 65){
     PWM -=10;
     analogWrite(PWM_PIN,PWM);                           //Restart mosfet
   }
   //if(watts < 60) analogWrite(PWM_PIN,PWM);              //Restart mosfet
-  if(!gateSwitch) analogWrite(PWM_PIN,0);
+  //if(!gateSwitch) analogWrite(PWM_PIN,0);
 
 
 	return true;

@@ -161,7 +161,7 @@ setInterval(function() {
         var x = (new Date()).getTime(),
             y = parseFloat(this.responseText);
         //console.log(this.responseText);
-        if(chartP.series[0].data.length > 300) {  //this value is the sample numer in plot
+        if(chartP.series[0].data.length > 60) {  //this value is the sample numer in plot
           chartP.series[0].addPoint([x, y], true, true, true);
         } else {
           chartP.series[0].addPoint([x, y], true, false, true);
@@ -203,7 +203,7 @@ setInterval(function() {
         var x = (new Date()).getTime(),
             y = parseFloat(this.responseText);
         //console.log(this.responseText);
-        if(chartT.series[0].data.length > 300) {  //this value is the sample numer in plot
+        if(chartT.series[0].data.length > 60) {  //this value is the sample numer in plot
           chartT.series[0].addPoint([x, y], true, true, true);
         } else {
           chartT.series[0].addPoint([x, y], true, false, true);
