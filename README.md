@@ -1,10 +1,14 @@
-# Electronic Load - 60W
+![](hardware/pictures/picture2-ban.jpg)
 
-This is a DIY project aimed at providing a practical, useful  and safe electronic load for people interested in electronics. While it is not be the most powerful electronic load available, it is designed to be easy to use and reliable, making it an excellent option for those looking for a DIY electronic load. We develop a HW and SW for complete integration, but you can use it as you want. Based in microcontroller ESP32-C3.
+[![GitHub version](https://img.shields.io/github/release/CasamaMaker/eLoad.svg)](https://github.com/CasamaMaker/eLoad/releases)
+[![GitHub download](https://img.shields.io/github/downloads/CasamaMaker/eLoad/total.svg)](https://github.com/CasamaMaker/eLoad/releases/latest)
+[![License](https://img.shields.io/github/license/CasamaMaker/eLoad.svg)](LICENSE.txt)
 
 [__Project published on OSHWLAB__](https://oshwlab.com/canmarques/electronic-load_v2_copy)
 
-![](hardware/pictures/picture2.jpg)
+# Electronic Load - 60W
+
+This is a DIY project aimed at providing a practical, useful  and safe electronic load for people interested in electronics. While it is not be the most powerful electronic load available, it is designed to be easy to use and reliable, making it an excellent option for those looking for a DIY electronic load. We develop a HW and SW for complete integration, but you can use it as you want. Based in microcontroller ESP32-C3.
 
 ---
 
