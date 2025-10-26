@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eLoad - Monitor ESP32</title>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .metric-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 2rem;
+        }
+
+        .voltage-icon { background: linear-gradient(45deg, #FF6B6B, #FF8E53); }
+        .current-icon { background: linear-gradient(45deg, #4ECDC4, #44A08D); }
+        .power-icon { background: linear-gradient(45deg, #A8EDEA, #6B73FF); }
+        .temp-icon { background: linear-gradient(45deg, #FDBB2D, #FF4E50); }
+
+        .metric-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-unit {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .charts-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .charts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .charts-title {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .time-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .time-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .time-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .time-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>⚡ eLoad</h1>
+        <div class="header-buttons">
+            <a href="https://github.com/RaspiGame/eLoad" class="btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Código Fuente
+            </a>
+        </div>
+    </header>
+
+    <div class="status-bar">
+        <div class="connection-status">
+            <div class="status-dot"></div>
+            <span>ESP32 Conectado</span>
+        </div>
+        <div class="connection-status">
+            <span id="last-update">Última actualización: --:--:--</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon voltage-icon">⚡</div>
+                <div class="metric-label">Voltaje</div>
+                <div class="metric-value" id="ADCV">--</div>
+                <div class="metric-unit">V</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon current-icon">🔌</div>
+                <div class="metric-label">Corriente</div>
+                <div class="metric-value" id="ADCA">--</div>
+                <div class="metric-unit">A</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon power-icon">💡</div>
+                <div class="metric-label">Potencia</div>
+                <div class="metric-value" id="ADCP">--</div>
+                <div class="metric-unit">W</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon temp-icon">🌡️</div>
+                <div class="metric-label">Temperatura</div>
+                <div class="metric-value" id="ADCT">--</div>
+                <div class="metric-unit">°C</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <div class="charts-header">
+                <h2 class="charts-title">📊 Gráficos en Tiempo Real</h2>
+                <div class="time-controls">
+                    <button class="time-btn active" data-time="5">5 min</button>
+                    <button class="time-btn" data-time="15">15 min</button>
+                    <button class="time-btn" data-time="30">30 min</button>
+                    <button class="time-btn" data-time="60">1 hora</button>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div id="chart-current"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="chart-voltage"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="chart-power"></div>
+                </div>
+                <div class="chart-container">
+                    <div id="chart-temperature"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 eLoad - Diseñado por <a href="https://github.com/RaspiGame/eLoad">Martí Casamayor</a> | MIT License</p>
+    </footer>
+
+    <script>
+        // Variables globales
+        let currentTimeRange = 5; // minutos
+        let charts = {};
+        
+        // Función para actualizar la hora de última actualización
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('last-update').textContent = `Última actualización: ${timeString}`;
+        }
+
+        // Función para obtener datos del ESP32
+        function fetchData(endpoint, elementId, callback) {
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    const value = parseFloat(this.responseText);
+                    document.getElementById(elementId).textContent = value.toFixed(2);
+                    if (callback) callback(value);
+                    updateLastUpdateTime();
+                }
+            };
+            xhr.open("GET", endpoint, true);
+            xhr.send();
+        }
+
+        // Configuración de gráficos
+        function createChart(containerId, title, yAxisTitle, color, min, max) {
+            return new Highcharts.Chart({
+                chart: { 
+                    renderTo: containerId,
+                    backgroundColor: 'transparent',
+                    height: 300
+                },
+                title: { 
+                    text: title,
+                    style: { color: '#333', fontSize: '18px', fontWeight: 'bold' }
+                },
+                series: [{
+                    name: title,
+                    showInLegend: false,
+                    data: [],
+                    color: color
+                }],
+                plotOptions: {
+                    line: { 
+                        animation: false,
+                        lineWidth: 3,
+                        marker: {
+                            enabled: false,
+                            states: {
+                                hover: { enabled: true, radius: 5 }
+                            }
+                        }
+                    }
+                },
+                xAxis: { 
+                    type: 'datetime',
+                    dateTimeLabelFormats: { second: '%H:%M:%S' },
+                    gridLineWidth: 1,
+                    gridLineColor: '#e6e6e6'
+                },
+                yAxis: {
+                    title: { text: yAxisTitle },
+                    min: min,
+                    max: max,
+                    gridLineWidth: 1,
+                    gridLineColor: '#e6e6e6'
+                },
+                credits: { enabled: false },
+                tooltip: {
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                    borderColor: color,
+                    borderRadius: 10,
+                    shadow: true
+                }
+            });
+        }
+
+        // Inicializar gráficos
+        function initCharts() {
+            charts.current = createChart('chart-current', 'Corriente', 'Amperios (A)', '#4ECDC4', 0, 6);
+            charts.voltage = createChart('chart-voltage', 'Voltaje', 'Voltios (V)', '#FF6B6B', 0, 25);
+            charts.power = createChart('chart-power', 'Potencia', 'Vatios (W)', '#6B73FF', 0, 65);
+            charts.temperature = createChart('chart-temperature', 'Temperatura', 'Grados (°C)', '#FF4E50', 0, 120);
+        }
+
+        // Función para añadir puntos a los gráficos
+        function addPointToChart(chart, value, maxPoints) {
+            const x = (new Date()).getTime();
+            const y = parseFloat(value);
+            
+            if (chart.series[0].data.length > maxPoints) {
+                chart.series[0].addPoint([x, y], true, true, true);
+            } else {
+                chart.series[0].addPoint([x, y], true, false, true);
+            }
+        }
+
+        // Control de botones de tiempo
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTimeRange = parseInt(this.dataset.time);
+            });
+        });
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            
+            // Actualizar valores cada segundo
+            setInterval(() => {
+                fetchData("/readV", "ADCV", (value) => addPointToChart(charts.voltage, value, 300));
+                fetchData("/readA", "ADCA", (value) => addPointToChart(charts.current, value, 300));
+            }, 1000);
+            
+            // Actualizar potencia y temperatura cada 5 segundos
+            setInterval(() => {
+                fetchData("/readP", "ADCP", (value) => addPointToChart(charts.power, value, 60));
+                fetchData("/readT", "ADCT", (value) => addPointToChart(charts.temperature, value, 60));
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
